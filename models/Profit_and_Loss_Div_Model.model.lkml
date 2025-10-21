@@ -25,15 +25,37 @@ persist_with: Profit_and_Loss_Div_Model_default_datagroup
 # Typically, join parameters require that you define the join type, join relationship, and a sql_on clause.
 # Each joined view also needs to define a primary key.
 
-explore: geography_dimension {}
+explore: profit_and_loss {
+  from: profit_loss_fact
+  label: "Profit and Loss"
 
-explore: customer_dimension {}
+  join: customer_dimension {
+    type: left_outer
+    sql_on: ${profit_and_loss.customer_id} = ${customer_dimension.customer_id} ;;
+    relationship: many_to_one
+  }
 
-explore: product_dimension {}
+  join: department_dimension {
+    type: left_outer
+    sql_on: ${profit_and_loss.customer_id} = ${customer_dimension.customer_id} ;;
+    relationship: many_to_one
+  }
 
-explore: department_dimension {}
+  join: geography_dimension {
+    type: left_outer
+    sql_on: ${profit_and_loss.geo_id} = ${geography_dimension.geo_id} ;;
+    relationship: many_to_one
+  }
 
-explore: date_dimension {}
+  join: product_dimension {
+    type: left_outer
+    sql_on: ${profit_and_loss.product_id} = ${product_dimension.product_id} ;;
+    relationship: many_to_one
+  }
 
-explore: profit_loss_fact {}
-
+  join: date_dimension {
+    type: left_outer
+    sql_on: ${profit_and_loss.date_id} = ${date_dimension.date_id} ;;
+    relationship: many_to_one
+  }
+}
