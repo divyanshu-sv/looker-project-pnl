@@ -1,0 +1,71 @@
+# The name of this view in Looker is "Profit Loss Fact"
+view: profit_loss_fact {
+  # The sql_table_name parameter indicates the underlying database table
+  # to be used for all fields in this view.
+  sql_table_name: `Profit_and_Loss_Dataset.Profit_Loss_Fact` ;;
+
+  # No primary key is defined for this view. In order to join this view in an Explore,
+  # define primary_key: yes on a dimension that has no repeated values.
+
+    # Here's what a typical dimension looks like in LookML.
+    # A dimension is a groupable field that can be used to filter query results.
+    # This dimension will be called "Cost Amount" in Explore.
+
+  dimension: cost_amount {
+    type: number
+    sql: ${TABLE}.cost_amount ;;
+  }
+
+  dimension: customer_id {
+    type: number
+    sql: ${TABLE}.customer_id ;;
+  }
+  # Dates and timestamps can be represented in Looker using a dimension group of type: time.
+  # Looker converts dates and timestamps to the specified timeframes within the dimension group.
+
+  dimension_group: date {
+    type: time
+    timeframes: [raw, date, week, month, quarter, year]
+    convert_tz: no
+    datatype: date
+    sql: ${TABLE}.date ;;
+  }
+
+  dimension: date_id {
+    type: number
+    sql: ${TABLE}.date_id ;;
+  }
+
+  dimension: dept_id {
+    type: number
+    sql: ${TABLE}.dept_id ;;
+  }
+
+  dimension: geo_id {
+    type: number
+    sql: ${TABLE}.geo_id ;;
+  }
+
+  dimension: product_id {
+    type: number
+    sql: ${TABLE}.product_id ;;
+  }
+
+  dimension: profit_amount {
+    type: number
+    sql: ${TABLE}.profit_amount ;;
+  }
+
+  dimension: sales_amount {
+    type: number
+    sql: ${TABLE}.sales_amount ;;
+  }
+
+  dimension: transaction_id {
+    type: number
+    sql: ${TABLE}.transaction_id ;;
+  }
+  measure: count {
+    type: count
+  }
+}
