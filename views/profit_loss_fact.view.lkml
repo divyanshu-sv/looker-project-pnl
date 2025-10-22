@@ -116,34 +116,35 @@ view: profit_loss_fact {
   # This is the single measure users will add to their report.
   # It uses Liquid to change its value and label.
 
-      measure: selected_metric {
-        # The label dynamically changes
-        label: "{% if selected_metric_parameter._parameter_value == 'sales' %}
-        Total Sales
-        {% elsif selected_metric_parameter._parameter_value == 'cost' %}
-        Total Cost
-        {% elsif selected_metric_parameter._parameter_value == 'profit' %}
-        Total Profit
-        {% else %}
-        Total Sales
-        {% endif %}"
+  measure: selected_metric {
+    # The label dynamically changes
+    label: "{% if selected_metric_parameter._parameter_value == 'sales' %}
+    Total Sales
+    {% elsif selected_metric_parameter._parameter_value == 'cost' %}
+    Total Cost
+    {% elsif selected_metric_parameter._parameter_value == 'profit' %}
+    Total Profit
+    {% else %}
+    Total Sales
+    {% endif %}"
 
-        type: number
-        value_format_name: usd_0
+    type: number
+    value_format_name: usd_0
 
-        # The sql block dynamically switches which measure to show
-        sql:
-              {% if selected_metric_parameter._parameter_value == 'sales' %}
-                ${total_sales}
-              {% elsif selected_metric_parameter._parameter_value == 'cost' %}
-                ${total_cost}
-              {% elsif selected_metric_parameter._parameter_value == 'profit' %}
-                ${total_profit}
-              {% else %}
-                ${total_sales}  -- Default to sales
-              {% endif %}
-              ;;
-      }
+    # The sql block dynamically switches which measure to show
+    sql:
+          {% if selected_metric_parameter._parameter_value == 'sales' %}
+            ${total_sales}
+          {% elsif selected_metric_parameter._parameter_value == 'cost' %}
+            ${total_cost}
+          {% elsif selected_metric_parameter._parameter_value == 'profit' %}
+            ${total_profit}
+          {% else %}
+            ${total_sales}  -- Default to sales
+          {% endif %}
+          ;;
+  }
+
   measure: count {
     type: count
   }
