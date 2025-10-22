@@ -128,9 +128,10 @@ view: profit_loss_fact {
   }
 
 # --- [NEW] DYNAMIC DATE GRANULARITY CODE BLOCK ---
+  # This code is based on your image, but structured correctly to avoid errors.
 
   # 1. THE PARAMETER (THE FILTER)
-  # This creates the "Select Date Granularity" filter in the Explore.
+  # This is from your image.
   parameter: selected_date_granularity {
     type: unquoted
     label: "Select Date Granularity"
@@ -149,10 +150,9 @@ view: profit_loss_fact {
     default_value: "month"
   }
 
-  # 2. THE HIDDEN SORT KEY (FOR CORRECT SORTING)
-  # This dimension provides the *actual, full date* for sorting.
-  # It uses the timeframes from your `dimension_group: date` above.
-  # These are full dates (e.g., 2023-01-01) and will sort correctly.
+  # 2. THE HIDDEN SORT KEY (THIS IS YOUR CODE, RENAMED)
+  # This dimension uses the logic from your image's sql: block.
+  # It is named "dynamic_date_sort_key" to AVOID CONFLICTING with your "date" dimension group.
   dimension: dynamic_date_sort_key {
     hidden: yes
     type: date # This is a real date, so it sorts chronologically
@@ -170,7 +170,7 @@ view: profit_loss_fact {
   }
 
   # 3. THE VISIBLE DIMENSION (FOR YOUR CHART'S X-AXIS)
-  # This creates the clean *string label* (e.g., "2023" or "2023-01").
+  # This is the *missing piece*. It creates the clean string label.
   dimension: dynamic_date_dimension {
     label_from_parameter: selected_date_granularity # Makes the label dynamic
     type: string # This is a string for display
@@ -180,13 +180,13 @@ view: profit_loss_fact {
       {% elsif selected_date_granularity._parameter_value == 'month' %}
         FORMAT_DATE("%Y-%m", ${date_date})
       {% elsif selected_date_granularity._parameter_value == 'week' %}
-        # Use ${date_week} here to ensure the label matches the sort key
         FORMAT_DATE("%Y-%m-%d", ${date_week})
       {% else %}
         FORMAT_DATE("%Y-%m", ${date_date})
       {% endif %}
     ;;
     # This tells the string dimension to sort using the hidden date dimension.
+    # This is the most important part.
       order_by_field: dynamic_date_sort_key
     }
 
