@@ -126,4 +126,57 @@ view: profit_loss_fact {
       END
     ;;
   }
+
+# --- Dynamic Date Granularity Parameter ---
+
+  parameter: selected_date_granularity {
+    type: unquoted
+    label: "Select Date Granularity"
+    allowed_value: {
+      label: "Year"
+      value: "year"
+    }
+    allowed_value: {
+      label: "Month"
+      value: "month"
+    }
+    allowed_value: {
+      label: "Week"
+      value: "week"
+    }
+    default_value: "month"
+  }
+
+  # --- Hidden Sort Key Dimension ---
+  # This dimension provides the *actual date* for sorting. We'll hide it.
+  dimension: dynamic_date_sort_key {
+    hidden: yes
+    type: date # This ensures chronological sorting
+    sql:
+      CASE
+        WHEN {% parameter selected_date_granularity %} = 'year' THEN ${date_year}
+        WHEN {% parameter selected_date_granularity %} = 'month' THEN ${date_month}
+        WHEN {% parameter selected_date_granularity %} = 'week' THEN ${date_week}
+        ELSE ${date_month}
+      END
+    ;;
+  }
+
+  # --- Dynamic Date Dimension for Charting ---
+  # This is the dimension you will add to your charts (x-axis).
+  # It displays a clean string label but sorts using the dimension above.
+  dimension: dynamic_date_dimension {
+    label_from_parameter: selected_date_granularity # Makes the label dynamic!
+    type: string
+    sql:
+      CASE
+        # Using FORMAT_DATE for clean labels (assuming BigQuery dialect from your `sql_table_name`)
+        WHEN {% parameter selected_date_granularity %} = 'year' THEN FORMAT_DATE("%Y", ${date_date})
+        WHEN {% parameter selected_date_granularity %} = 'month' THEN FORMAT_DATE("%Y-%m", ${date_date})
+        WHEN {% parameter selected_date_granularity %} = 'week' THEN FORMAT_DATE("%Y-%m-%d", ${date_week})
+        ELSE FORMAT_DATE("%Y-%m", ${date_date})
+      END
+    ;;
+    order_by_field: dynamic_date_sort_key # <-- This is the most important part
+  }
 }
