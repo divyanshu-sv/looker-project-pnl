@@ -74,21 +74,21 @@ view: profit_loss_fact {
     type: sum
     sql: ${sales_amount} ;; # References the dimension
     value_format_name: usd_0
-    hidden: yes
+    hidden: no
   }
 
   measure: total_cost {
     type: sum
     sql: ${cost_amount} ;; # References the dimension
     value_format_name: usd_0
-    hidden: yes
+    hidden: no
   }
 
   measure: total_profit {
     type: sum
     sql: ${profit_amount} ;; # References the dimension
     value_format_name: usd_0
-    hidden: yes
+    hidden: no
   }
 
   # --- >>> STEP 2: CREATE THE PARAMETER ---
@@ -116,6 +116,11 @@ view: profit_loss_fact {
   # This is the single measure users will add to their report.
   # It uses Liquid to change its value and label.
 
+  # --- >>> STEP 3: CREATE THE DYNAMIC MEASURE ---
+
+# This is the single measure users will add to their report.
+# It uses Liquid to change its value and label.
+
   measure: selected_metric {
 
     # The label dynamically changes
@@ -129,21 +134,20 @@ view: profit_loss_fact {
     Total Sales
     {% endif %}"
 
-    type: number
+    # CHANGE: Set type to 'number' or 'sum' (sum is better for an aggregate measure)
+    type: sum
     value_format_name: usd_0
 
-    # The sql block dynamically switches which measure to show
+    # CHANGE: The sql block dynamically switches which DIMENSION to SUM
+    # The use of the CASE statement ensures the measure works correctly with the chosen 'type: sum'.
     sql:
-      {% if selected_metric_parameter._parameter_value == 'sales' %}
-        ${total_sales}
-      {% elsif selected_metric_parameter._parameter_value == 'cost' %}
-        ${total_cost}
-      {% elsif selected_metric_parameter._parameter_value == 'profit' %}
-        ${total_profit}
-      {% else %}
-        ${total_sales}  -- Default to sales
-      {% endif %}
-      ;;
+    CASE
+      WHEN {% parameter selected_metric_parameter %} = 'sales' THEN ${sales_amount}
+      WHEN {% parameter selected_metric_parameter %} = 'cost' THEN ${cost_amount}
+      WHEN {% parameter selected_metric_parameter %} = 'profit' THEN ${profit_amount}
+      ELSE ${sales_amount}
+    END
+    ;;
   }
 
   measure: count {
