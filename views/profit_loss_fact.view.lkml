@@ -117,6 +117,7 @@ view: profit_loss_fact {
   # It uses Liquid to change its value and label.
 
   measure: selected_metric {
+
     # The label dynamically changes
     label: "{% if selected_metric_parameter._parameter_value == 'sales' %}
     Total Sales
@@ -133,16 +134,16 @@ view: profit_loss_fact {
 
     # The sql block dynamically switches which measure to show
     sql:
-          {% if selected_metric_parameter._parameter_value == 'sales' %}
-            ${total_sales}
-          {% elsif selected_metric_parameter._parameter_value == 'cost' %}
-            ${total_cost}
-          {% elsif selected_metric_parameter._parameter_value == 'profit' %}
-            ${total_profit}
-          {% else %}
-            ${total_sales}  -- Default to sales
-          {% endif %}
-          ;;
+      {% if selected_metric_parameter._parameter_value == 'sales' %}
+        ${total_sales}
+      {% elsif selected_metric_parameter._parameter_value == 'cost' %}
+        ${total_cost}
+      {% elsif selected_metric_parameter._parameter_value == 'profit' %}
+        ${total_profit}
+      {% else %}
+        ${total_sales}  -- Default to sales
+      {% endif %}
+      ;;
   }
 
   measure: count {
