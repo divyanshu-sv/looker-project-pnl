@@ -91,9 +91,7 @@ view: profit_loss_fact {
     hidden: no
   }
 
-  # --- >>> STEP 2: CREATE THE PARAMETER ---
-  # This will create the filter dropdown in the Explore.
-
+# --- >>> STEP 2: CREATE THE PARAMETER ---
   parameter: selected_metric_parameter {
     type: unquoted
     label: "Select Metric"
@@ -112,18 +110,12 @@ view: profit_loss_fact {
     }
   }
 
-  # --- >>> STEP 3: CREATE THE DYNAMIC MEASURE ---
-  # This is the single measure users will add to their report.
-  # It uses Liquid to change its value and label.
+# ----------------- FIX APPLIED HERE -----------------
 
-  # --- >>> STEP 3: CREATE THE DYNAMIC MEASURE ---
-
-# This is the single measure users will add to their report.
-# It uses Liquid to change its value and label.
-
+# --- >>> STEP 3: CREATE THE DYNAMIC MEASURE ---
   measure: selected_metric {
 
-    # The label dynamically changes
+    # The label dynamically changes (This part is correct)
     label: "{% if selected_metric_parameter._parameter_value == 'sales' %}
     Total Sales
     {% elsif selected_metric_parameter._parameter_value == 'cost' %}
@@ -134,18 +126,18 @@ view: profit_loss_fact {
     Total Sales
     {% endif %}"
 
-    # CHANGE: Set type to 'number' or 'sum' (sum is better for an aggregate measure)
+    # Set type to 'sum' for aggregation
     type: sum
     value_format_name: usd_0
 
-    # CHANGE: The sql block dynamically switches which DIMENSION to SUM
-    # The use of the CASE statement ensures the measure works correctly with the chosen 'type: sum'.
+    # The SQL block uses the CASE statement to switch the dimension being summed.
+    # We use the raw parameter value inside the SQL CASE statement.
     sql:
     CASE
       WHEN {% parameter selected_metric_parameter %} = 'sales' THEN ${sales_amount}
       WHEN {% parameter selected_metric_parameter %} = 'cost' THEN ${cost_amount}
       WHEN {% parameter selected_metric_parameter %} = 'profit' THEN ${profit_amount}
-      ELSE ${sales_amount}
+      ELSE ${sales_amount}  -- Default to sales_amount
     END
     ;;
   }
