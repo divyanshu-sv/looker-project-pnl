@@ -117,7 +117,7 @@ view: profit_loss_fact {
     type: number
     label: "Selected Dynamic Measure"
     value_format: "$#,##0.00"
-    sql: |
+    sql:
       CASE
         WHEN {% parameter select_metric %} = 'sales' THEN ${total_sales}
         WHEN {% parameter select_metric %} = 'cost' THEN ${total_cost}
