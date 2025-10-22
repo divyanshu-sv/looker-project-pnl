@@ -65,6 +65,85 @@ view: profit_loss_fact {
     type: number
     sql: ${TABLE}.transaction_id ;;
   }
+
+# --- >>> STEP 1: CREATE BASE MEASURES (HIDDEN) ---
+  # Create SUMs for your numeric dimensions.
+  # We hide them so users are encouraged to use the dynamic measure.
+
+  measure: total_sales {
+    type: sum
+    sql: ${sales_amount} ;; # References the dimension
+    value_format_name: usd_0
+    hidden: yes
+  }
+
+  measure: total_cost {
+    type: sum
+    sql: ${cost_amount} ;; # References the dimension
+    value_format_name: usd_0
+    hidden: yes
+  }
+
+  measure: total_profit {
+    type: sum
+    sql: ${profit_amount} ;; # References the dimension
+    value_format_name: usd_0
+    hidden: yes
+  }
+
+  # --- >>> STEP 2: CREATE THE PARAMETER ---
+  # This will create the filter dropdown in the Explore.
+
+  parameter: selected_metric_parameter {
+    type: unquoted
+    label: "Select Metric"
+    default_value: "sales" # This is the metric that will show by default
+    allowed_value: {
+      label: "Sales"
+      value: "sales"
+    }
+    allowed_value: {
+      label: "Cost"
+      value: "cost"
+    }
+    allowed_value: {
+      label: "Profit"
+      value: "profit"
+    }
+  }
+
+  # --- >>> STEP 3: CREATE THE DYNAMIC MEASURE ---
+  # This is the single measure users will add to their report.
+  # It uses Liquid to change its value and label.
+
+      measure: selected_metric {
+        # The label dynamically changes
+        label: "{% if selected_metric_parameter._parameter_value == 'sales' %}
+        Total Sales
+        {% elsif selected_metric_parameter._parameter_value == 'cost' %}
+        Total Cost
+        {% elsif selected_metric_parameter._parameter_value == 'profit' %}
+        Total Profit
+        {% else %}
+        Total Sales
+        {% endif %}"
+
+        type: number
+        value_format_name: usd_0
+
+        # The sql block dynamically switches which measure to show
+        sql:
+              {% if selected_metric_parameter._parameter_value == 'sales' %}
+                ${total_sales}
+              {% elsif selected_metric_parameter._parameter_value == 'cost' %}
+                ${total_cost}
+              {% elsif selected_metric_parameter._parameter_value == 'profit' %}
+                ${total_profit}
+              {% else %}
+                ${total_sales}  -- Default to sales
+              {% endif %}
+              ;;
+      }
   measure: count {
     type: count
   }
