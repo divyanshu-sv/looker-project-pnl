@@ -150,20 +150,19 @@ view: profit_loss_fact {
     default_value: "month"
   }
 
-  # 2. THE HIDDEN SORT KEY (FIXES YOUR ERROR)
+  # 2. THE HIDDEN SORT KEY (THIS FIXES YOUR ERROR)
   # This dimension provides the *actual, full date* for sorting.
   # It uses the timeframes from your existing `dimension_group: date`.
-  # These are already full dates (e.g., 2023-01-01) and will not cause an error.
   dimension: dynamic_date_sort_key {
     hidden: yes
     type: date # This is a real date, so it sorts chronologically
     sql:
       {% if selected_date_granularity._parameter_value == 'year' %}
-        ${date_year}
+        ${date_year}  -- This returns a full date like 2023-01-01
       {% elsif selected_date_granularity._parameter_value == 'month' %}
-        ${date_month}
+        ${date_month} -- This returns a full date like 2023-10-01
       {% elsif selected_date_granularity._parameter_value == 'week' %}
-        ${date_week}
+        ${date_week}  -- This returns a full date like 2023-10-16
       {% else %}
         ${date_month}
       {% endif %}
@@ -172,7 +171,7 @@ view: profit_loss_fact {
 
   # 3. THE VISIBLE DIMENSION (FOR YOUR CHART)
   # This is the dimension you will add to your chart's X-axis.
-  # It creates the clean *string label* (e.g., "2023-01").
+  # It creates the clean *string label* (e.g., "2023" or "2023-10").
   dimension: dynamic_date_dimension {
     label_from_parameter: selected_date_granularity # Makes the label dynamic
     type: string # This is a string for display
