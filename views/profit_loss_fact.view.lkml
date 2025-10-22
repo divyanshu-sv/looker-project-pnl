@@ -1,4 +1,5 @@
 # The name of this view in Looker is "Profit Loss Fact"
+
 view: profit_loss_fact {
   # The sql_table_name parameter indicates the underlying database table
   # to be used for all fields in this view.
@@ -7,9 +8,9 @@ view: profit_loss_fact {
   # No primary key is defined for this view. In order to join this view in an Explore,
   # define primary_key: yes on a dimension that has no repeated values.
 
-    # Here's what a typical dimension looks like in LookML.
-    # A dimension is a groupable field that can be used to filter query results.
-    # This dimension will be called "Cost Amount" in Explore.
+  # Here's what a typical dimension looks like in LookML.
+  # A dimension is a groupable field that can be used to filter query results.
+  # This dimension will be called "Cost Amount" in Explore.
 
   dimension: cost_amount {
     type: number
@@ -66,36 +67,38 @@ view: profit_loss_fact {
     sql: ${TABLE}.transaction_id ;;
   }
 
-# --- >>> STEP 1: CREATE BASE MEASURES (HIDDEN) ---
-  # Create SUMs for your numeric dimensions.
-  # We hide them so users are encouraged to use the dynamic measure.
+  # --- Requested Measures for Total Values ---
 
   measure: total_sales {
     type: sum
-    sql: ${sales_amount} ;; # References the dimension
-    value_format_name: usd_0
-    hidden: no
+    sql: ${sales_amount} ;;
+    label: "Total Sales"
+    value_format: "$#,##0.00"
   }
 
   measure: total_cost {
     type: sum
-    sql: ${cost_amount} ;; # References the dimension
-    value_format_name: usd_0
-    hidden: no
+    sql: ${cost_amount} ;;
+    label: "Total Cost"
+    value_format: "$#,##0.00"
   }
 
   measure: total_profit {
     type: sum
-    sql: ${profit_amount} ;; # References the dimension
-    value_format_name: usd_0
-    hidden: no
+    sql: ${profit_amount} ;;
+    label: "Total Profit"
+    value_format: "$#,##0.00"
   }
 
-# --- >>> STEP 2: CREATE THE PARAMETER ---
-  parameter: selected_metric_parameter {
-    type: unquoted
+  measure: count {
+    type: count
+  }
+
+  # --- Dynamic Measure Parameter and Field ---
+
+  parameter: select_metric {
+    type: string
     label: "Select Metric"
-    default_value: "sales" # This is the metric that will show by default
     allowed_value: {
       label: "Sales"
       value: "sales"
@@ -110,39 +113,17 @@ view: profit_loss_fact {
     }
   }
 
-# ----------------- FIX APPLIED HERE -----------------
-
-# --- >>> STEP 3: CREATE THE DYNAMIC MEASURE ---
-  measure: selected_metric {
-
-    # The label dynamically changes (This part is correct)
-    label: "{% if selected_metric_parameter._parameter_value == 'sales' %}
-    Total Sales
-    {% elsif selected_metric_parameter._parameter_value == 'cost' %}
-    Total Cost
-    {% elsif selected_metric_parameter._parameter_value == 'profit' %}
-    Total Profit
-    {% else %}
-    Total Sales
-    {% endif %}"
-
-    # Set type to 'sum' for aggregation
-    type: sum
-    value_format_name: usd_0
-
-    # The SQL block uses the CASE statement to switch the dimension being summed.
-    # We use the raw parameter value inside the SQL CASE statement.
-    sql:
-    CASE
-      WHEN {% parameter selected_metric_parameter %} = 'sales' THEN ${sales_amount}
-      WHEN {% parameter selected_metric_parameter %} = 'cost' THEN ${cost_amount}
-      WHEN {% parameter selected_metric_parameter %} = 'profit' THEN ${profit_amount}
-      ELSE ${sales_amount}  -- Default to sales_amount
-    END
+  measure: selected_dynamic_measure {
+    type: number
+    label: "Selected Dynamic Measure"
+    value_format: "$#,##0.00"
+    sql: |
+      CASE
+        WHEN {% parameter select_metric %} = 'sales' THEN ${total_sales}
+        WHEN {% parameter select_metric %} = 'cost' THEN ${total_cost}
+        WHEN {% parameter select_metric %} = 'profit' THEN ${total_profit}
+        ELSE NULL
+      END
     ;;
-  }
-
-  measure: count {
-    type: count
   }
 }
