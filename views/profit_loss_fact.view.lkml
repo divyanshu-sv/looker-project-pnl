@@ -129,6 +129,7 @@ view: profit_loss_fact {
 
 # --- Dynamic Date Granularity Parameter ---
 
+  # (This creates the filter for the user)
   parameter: selected_date_granularity {
     type: unquoted
     label: "Select Date Granularity"
@@ -148,37 +149,43 @@ view: profit_loss_fact {
   }
 
   # --- Hidden Sort Key Dimension ---
-  # This dimension provides the *actual date* for sorting.
-  # It correctly uses the timeframes from your "date" dimension group,
-  # which are ALL "date" types, fixing the "supertype" error.
+  # This provides the *actual date* for sorting the chart correctly.
+  # It uses the Liquid `if` logic you requested.
   dimension: dynamic_date_sort_key {
     hidden: yes
-    type: date # This ensures chronological sorting
+    type: date # This must be a date type for chronological sorting
     sql:
-      CASE
-        WHEN {% parameter selected_date_granularity %} = 'year' THEN ${date_year}
-        WHEN {% parameter selected_date_granularity %} = 'month' THEN ${date_month}
-        WHEN {% parameter selected_date_granularity %} = 'week' THEN ${date_week}
-        ELSE ${date_month}
-      END
+      {% if selected_date_granularity._parameter_value == 'year' %}
+        ${date_year}
+      {% elsif selected_date_granularity._parameter_value == 'month' %}
+        ${date_month}
+      {% elsif selected_date_granularity._parameter_value == 'week' %}
+        ${date_week}
+      {% else %}
+        ${date_month}
+      {% endif %}
     ;;
   }
 
   # --- Dynamic Date Dimension for Charting ---
-  # This is the dimension you will add to your charts (x-axis).
-  # It correctly uses the parameter to change the string formatting.
+  # This is the dimension you will add to your chart's X-axis.
+  # It uses Liquid `if` to create the string labels.
   dimension: dynamic_date_dimension {
     label_from_parameter: selected_date_granularity
-    type: string
+    type: string # This must be a string to hold different formats
     sql:
-      CASE
-        WHEN {% parameter selected_date_granularity %} = 'year' THEN FORMAT_DATE("%Y", ${date_date})
-        WHEN {% parameter selected_date_granularity %} = 'month' THEN FORMAT_DATE("%Y-%m", ${date_date})
-        WHEN {% parameter selected_date_granularity %} = 'week' THEN FORMAT_DATE("%Y-%m-%d", ${date_week})
-        ELSE FORMAT_DATE("%Y-%m", ${date_date})
-      END
+      {% if selected_date_granularity._parameter_value == 'year' %}
+        FORMAT_DATE("%Y", ${date_date})
+      {% elsif selected_date_granularity._parameter_value == 'month' %}
+        FORMAT_DATE("%Y-%m", ${date_date})
+      {% elsif selected_date_granularity._parameter_value == 'week' %}
+        FORMAT_DATE("%Y-%m-%d", ${date_week})
+      {% else %}
+        FORMAT_DATE("%Y-%m", ${date_date})
+      {% endif %}
     ;;
-    # This correctly sorts the string label by the hidden date field.
+    # This is the most important part:
+    # It sorts the string labels using the hidden date field.
       order_by_field: dynamic_date_sort_key
     }
 }
