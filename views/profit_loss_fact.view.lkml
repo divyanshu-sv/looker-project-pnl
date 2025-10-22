@@ -126,35 +126,37 @@ view: profit_loss_fact {
       END
     ;;
   }
+
 # --- [NEW] DYNAMIC DATE GRANULARITY CODE BLOCK ---
 
 
-# 1. THE PARAMETER (THE FILTER)
-parameter: selected_date_granularity {
-  type: unquoted
-  label: "Select Date Granularity"
-  allowed_value: {
-    label: "Year"
-    value: "year"
+  # 1. THE PARAMETER (THE FILTER)
+  # This creates the "Select Date Granularity" filter in the Explore.
+  parameter: selected_date_granularity {
+    type: unquoted
+    label: "Select Date Granularity"
+    allowed_value: {
+      label: "Year"
+      value: "year"
+    }
+    allowed_value: {
+      label: "Month"
+      value: "month"
+    }
+    allowed_value: {
+      label: "Week"
+      value: "week"
+    }
+    default_value: "month"
   }
-  allowed_value: {
-    label: "Month"
-    value: "month"
-  }
-  allowed_value: {
-    label: "Week"
-    value: "week"
-  }
-  default_value: "month"
-}
 
-# 2. THE HIDDEN SORT KEY (THIS FIXES YOUR ERROR)
-# This uses your existing ${date_year} field, which returns a
-# full date (e.g., 2023-01-01) and WILL NOT cause an error.
-dimension: dynamic_date_sort_key {
-  hidden: yes
-  type: date
-  sql:
+  # 2. THE HIDDEN SORT KEY (THIS FIXES YOUR ERROR)
+  # This uses your existing ${date_year} field, which returns a
+  # full date (e.g., 2023-01-01) and WILL NOT cause the INT64 error.
+  dimension: dynamic_date_sort_key {
+    hidden: yes
+    type: date # This is a real date, so it sorts chronologically
+    sql:
       {% if selected_date_granularity._parameter_value == 'year' %}
         ${date_year}
       {% elsif selected_date_granularity._parameter_value == 'month' %}
@@ -165,27 +167,29 @@ dimension: dynamic_date_sort_key {
         ${date_month}
       {% endif %}
     ;;
-}
+  }
 
-# 3. THE VISIBLE DIMENSION (FOR YOUR CHART'S X-AXIS)
-# This creates the clean *string label* (e.g., "2023").
-dimension: dynamic_date_dimension {
-  label_from_parameter: selected_date_granularity
-  type: string
-  sql:
+  # 3. THE VISIBLE DIMENSION (FOR YOUR CHART'S X-AXIS)
+  # This creates the clean *string label* (e.g., "2023").
+  dimension: dynamic_date_dimension {
+    label_from_parameter: selected_date_granularity # Makes the label dynamic
+    type: string # This is a string for display
+    sql:
       {% if selected_date_granularity._parameter_value == 'year' %}
         FORMAT_DATE("%Y", ${date_date})
       {% elsif selected_date_granularity._parameter_value == 'month' %}
         FORMAT_DATE("%Y-%m", ${date_date})
       {% elsif selected_date_granularity._parameter_value == 'week' %}
+        # Use ${date_week} here to ensure the label matches the sort key
         FORMAT_DATE("%Y-%m-%d", ${date_week})
       {% else %}
         FORMAT_DATE("%Y-%m", ${date_date})
       {% endif %}
     ;;
-    # This sorts the string label by the hidden, correct date field.
-    order_by_field: dynamic_date_sort_key
-  }
+    # This tells the string dimension to sort using the hidden date dimension.
+      order_by_field: dynamic_date_sort_key
+    }
 
-  # --- END OF DYNAMIC DATE CODE BLOCK ---
-  }
+    # --- END OF DYNAMIC DATE CODE BLOCK ---
+
+}
