@@ -152,4 +152,15 @@ view: profit_loss_fact {
       END
     ;;
     }
+
+# --- 🌟 ADD THIS PARAMETER FOR TOP N 🌟 ---
+
+  parameter: top_n_input {
+    label: "Top N Count"
+    type: number
+    default_value: "10"
+    description: "Enter a number (e.g., 5, 10) to filter for the Top N. Use with 'Is Top N' table calculation."
+  }
+
+  # --- End of view ---
   }
