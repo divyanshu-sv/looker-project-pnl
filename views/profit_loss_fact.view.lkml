@@ -1,12 +1,16 @@
 # The name of this view in Looker is "Profit Loss Fact"
 
+
 view: profit_loss_fact {
   # The sql_table_name parameter indicates the underlying database table
   # to be used for all fields in this view.
   sql_table_name: `Profit_and_Loss_Dataset.Profit_Loss_Fact` ;;
 
-  # No primary key is defined for this view. In order to join this view in an Explore,
-  # define primary_key: yes on a dimension that has no repeated values.
+  dimension: transaction_id {
+    primary_key: yes  # <-- ADDED THIS: Set as primary key for joins
+    type: number
+    sql: ${TABLE}.transaction_id ;;
+  }
 
   # Here's what a typical dimension looks like in LookML.
   # A dimension is a groupable field that can be used to filter query results.
@@ -62,62 +66,84 @@ view: profit_loss_fact {
     sql: ${TABLE}.sales_amount ;;
   }
 
-  dimension: transaction_id {
+  # --- 🌟 ADDED OFFSET DIMENSIONS 🌟 ---
+  # These dimensions use SQL LAG() to get the value from the previous
+  # row, when ordered by date. This is a DIMENSION, not a MEASURE.
+
+  dimension: previous_row_sales {
+    label: "Previous Row's Sales Amount"
     type: number
-    sql: ${TABLE}.transaction_id ;;
-  }
-
-  # --- Requested Measures for Total Values ---
-
-  measure: total_sales {
-    type: sum
-    sql: ${sales_amount} ;;
-    label: "Total Sales"
-    value_format: "$#,##0.00"
-  }
-
-  measure: total_cost {
-    type: sum
-    sql: ${cost_amount} ;;
-    label: "Total Cost"
-    value_format: "$#,##0.00"
-  }
-
-  measure: total_profit {
-    type: sum
-    sql: ${profit_amount} ;;
-    label: "Total Profit"
-    value_format: "$#,##0.00"
-  }
-
-  measure: count {
-    type: count
-  }
-
-  # --- Dynamic Measure Parameter and Field ---
-
-  parameter: select_metric {
-    type: string
-    label: "Select Metric"
-    allowed_value: {
-      label: "Sales"
-      value: "sales"
-    }
-    allowed_value: {
-      label: "Cost"
-      value: "cost"
-    }
-    allowed_value: {
-      label: "Profit"
-      value: "profit"
-    }
-  }
-
-  measure: selected_dynamic_measure {
-    type: number
-    label: "Selected Dynamic Measure"
     value_format: "$#,##0.00"
     sql:
+      LAG(${sales_amount}, 1) OVER (
+        ORDER BY ${date_raw} ASC
+      ) ;;
+    # '1' = offset by 1 row
+    # 'ORDER BY ${date_raw} ASC' = sorts by the raw date before lagging
+    }
+
+    dimension: previous_row_profit {
+      label: "Previous Row's Profit Amount"
+      type: number
+      value_format: "$#,##0.00"
+      sql:
+      LAG(${profit_amount}, 1) OVER (
+        ORDER BY ${date_raw} ASC
+      ) ;;
+    }
+
+    # --- Requested Measures for Total Values ---
+
+    measure: total_sales {
+      type: sum
+      sql: ${sales_amount} ;;
+      label: "Total Sales"
+      value_format: "$#,##0.00"
+    }
+
+    measure: total_cost {
+      type: sum
+      sql: ${cost_amount} ;;
+      label: "Total Cost"
+      value_format: "$#,##0.00"
+    }
+
+    measure: total_profit {
+      type: sum
+      sql: ${profit_amount} ;;
+      label: "Total Profit"
+      value_format: "$#,##0.00"
+    }
+
+    measure: count {
+      type: count
+      drill_fields: [transaction_id] # <-- Added drill field
+    }
+
+    # --- Dynamic Measure Parameter and Field ---
+
+    parameter: select_metric {
+      type: string
+      label: "Select Metric"
+      allowed_value: {
+        label: "Sales"
+        value: "sales"
+      }
+      allowed_value: {
+        label: "Cost"
+        value: "cost"
+      }
+      allowed_value: {
+        label: "Profit"
+        value: "profit"
+      }
+    }
+
+    measure: selected_dynamic_measure {
+      type: number
+      label: "Selected Dynamic Measure"
+      value_format: "$#,##0.00"
+      sql:
       CASE
         WHEN {% parameter select_metric %} = 'sales' THEN ${total_sales}
         WHEN {% parameter select_metric %} = 'cost' THEN ${total_cost}
@@ -125,6 +151,5 @@ view: profit_loss_fact {
         ELSE NULL
       END
     ;;
+    }
   }
-
-}
