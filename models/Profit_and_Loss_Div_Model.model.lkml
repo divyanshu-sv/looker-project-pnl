@@ -37,7 +37,7 @@ explore: profit_and_loss {
 
   join: department_dimension {
     type: left_outer
-    sql_on: ${profit_and_loss.customer_id} = ${customer_dimension.customer_id} ;;
+    sql_on: ${profit_and_loss.dept_id} = ${department_dimension.dept_id} ;;
     relationship: many_to_one
   }
 
