@@ -1,7 +1,10 @@
 # Define the database connection to be used for this model.
+
 connection: "prateek_gcp_demo"
 
 # include all the views
+# This wildcard will automatically pick up your new view
+# as long as it's in the /views/ folder.
 include: "/views/**/*.view.lkml"
 
 # Datagroups define a caching policy for an Explore. To learn more,
@@ -14,17 +17,8 @@ datagroup: Profit_and_Loss_Div_Model_default_datagroup {
 
 persist_with: Profit_and_Loss_Div_Model_default_datagroup
 
-# Explores allow you to join together different views (database tables) based on the
-# relationships between fields. By joining a view into an Explore, you make those
-# fields available to users for data analysis.
-# Explores should be purpose-built for specific use cases.
-
-# To see the Explore you’re building, navigate to the Explore menu and select an Explore under "Profit and Loss Div Model"
-
-# To create more sophisticated Explores that involve multiple views, you can use the join parameter.
-# Typically, join parameters require that you define the join type, join relationship, and a sql_on clause.
-# Each joined view also needs to define a primary key.
-
+# This is your original, main explore.
+# We leave this untouched.
 explore: profit_and_loss {
   from: profit_loss_fact
   label: "Profit and Loss"
@@ -56,6 +50,28 @@ explore: profit_and_loss {
   join: date_dimension {
     type: left_outer
     sql_on: ${profit_and_loss.date_id} = ${date_dimension.date_id} ;;
+    relationship: many_to_one
+  }
+}
+
+# --- 🌟 1. ADD THIS NEW EXPLORE BLOCK 🌟 ---
+#
+# This creates a new, separate "Explore" in the Looker menu
+# that is purpose-built for your custom subtotal report.
+
+explore: pl_custom_report {
+  # This 'explore' starts FROM your new view
+  from: pl_with_custom_subtotals
+
+  # This is the name users will see in the Explore menu
+  label: "P&L Custom Subtotal Report"
+  description: "A special report showing SUM(Sales) for products and AVG(Sales) for department subtorals."
+
+  # We join 'department_dimension' so users can
+  # select the department name, region, etc.
+  join: department_dimension {
+    type: left_outer
+    sql_on: ${pl_custom_report.dept_id} = ${department_dimension.dept_id} ;;
     relationship: many_to_one
   }
 }
