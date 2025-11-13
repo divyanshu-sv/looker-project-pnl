@@ -2,7 +2,7 @@
 
 view: pl_with_custom_subtotals {
   derived_table: {
-    sql: |
+    sql:
       -- Query 1: The Detail Rows (SUM of sales by product)
       SELECT
         'detail' AS row_type,
